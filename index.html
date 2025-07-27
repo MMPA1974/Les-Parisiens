@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificateur de Visite à Paris</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Modern Neutrals with Vibrant Accents (Light Grey, Slate, Sky Blue, Subtle Green) -->
+    <!-- Application Structure Plan: A tab-based SPA. The structure includes: 1) A 'Dashboard' with a price comparison chart for a quick overview. 2) A 'Monuments' section with interactive cards for detailed exploration, now including "visited" status and notes. 3) A '3-Day Plan' section with a suggested itinerary grouped by location for efficiency. 4) A 'Practical Info' section for general tips. This task-oriented structure is more user-friendly for trip planning than a linear list, allowing users to switch between high-level comparison, detailed lookup, and itinerary planning seamlessly. -->
+    <!-- Visualization & Content Choices: Report Info: Monument prices -> Goal: Compare -> Viz: Bar Chart (Chart.js) -> Interaction: Hover for details -> Justification: Provides an immediate visual comparison of costs, a key factor in planning. Report Info: Monument details -> Goal: Inform/Organize -> Presentation: Interactive Cards in a Grid -> Interaction: Click to open a modal with full details, mark as visited, add notes -> Justification: A scannable, organized view that provides deep information on demand, now with personal tracking and annotation capabilities. Report Info: Itinerary -> Goal: Organize -> Presentation: 3-column layout -> Interaction: Static, but logically grouped -> Justification: Offers a clear, actionable plan that adds value beyond a simple list. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8F8F8; }
+        .tab-active { border-color: #3B82F6; color: #3B82F6; background-color: #EBF5FF; }
+        .tab-inactive { border-color: transparent; color: #64748B; }
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            background-color: white; transform: scale(0.95); transition: transform 0.3s ease;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .modal-backdrop.active .modal-content { transform: scale(1); }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 60vh;
+            }
+        }
+        .monument-card.visited {
+            background-color: #ECFDF5; /* Green 50 */
+            border: 2px solid #34D399; /* Green 400 */
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-700">🗺️ Votre Planificateur de Visite à Paris 🇫🇷</h1>
+            <p class="text-lg text-slate-500 mt-2">Organisez vos 3 jours inoubliables dans la Ville Lumière ! ✨</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center border-b-2 border-gray-200 mb-8">
+            <button data-tab="dashboard" class="nav-tab text-lg font-semibold py-3 px-6 border-b-4 tab-active">📊 Tableau de Bord</button>
+            <button data-tab="monuments" class="nav-tab text-lg font-semibold py-3 px-6 border-b-4 tab-inactive">🏛️ Monuments</button>
+            <button data-tab="planner" class="nav-tab text-lg font-semibold py-3 px-6 border-b-4 tab-inactive">🗓️ Plan 3 Jours</button>
+            <button data-tab="info" class="nav-tab text-lg font-semibold py-3 px-6 border-b-4 tab-inactive">💡 Infos Pratiques</button>
+        </nav>
+
+        <main>
+            <section id="dashboard" class="tab-content">
+                 <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-center mb-2 text-slate-700">Comparatif des Tarifs Adultes 💰</h2>
+                    <p class="text-center text-slate-500 mb-6">Visualisez rapidement le coût d'entrée des principaux monuments (hors tarifs réduits ou gratuité). Cela peut vous aider à budgétiser vos visites. 📊</p>
+                    <div class="chart-container">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="monuments" class="tab-content hidden">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-slate-700">Explorez les Monuments de Paris 📍</h2>
+                    <p class="text-slate-500">Cliquez sur une carte pour afficher toutes les informations détaillées, marquer comme visité et ajouter vos notes. 📝</p>
+                </div>
+                <div id="monuments-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                </div>
+            </section>
+
+            <section id="planner" class="tab-content hidden">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-slate-700">Suggestion de Planning sur 3 Jours 🗓️</h2>
+                    <p class="text-slate-500">Pour optimiser votre temps, voici un itinéraire qui regroupe les monuments par quartier. Vous pouvez bien sûr l'adapter selon vos envies ! ✨</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-bold mb-4 text-blue-600 border-b-2 border-blue-200 pb-2">Jour 1 : Le Cœur Historique ❤️</h3>
+                        <ul class="space-y-3 text-slate-700">
+                            <li><strong class="font-semibold">Matin :</strong> Musée du Louvre (prévoir 3-4h) 🖼️</li>
+                            <li><strong class="font-semibold">Midi :</strong> Déjeuner dans le quartier Latin 🍽️</li>
+                            <li><strong class="font-semibold">Après-midi :</strong> Sainte-Chapelle ✨ & Cathédrale Notre-Dame (extérieur) ⛪</li>
+                            <li><strong class="font-semibold">Soir :</strong> Dîner et balade sur l'Île de la Cité 🌉</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-bold mb-4 text-blue-600 border-b-2 border-blue-200 pb-2">Jour 2 : Panoramas & Gloire 🌟</h3>
+                        <ul class="space-y-3 text-slate-700">
+                            <li><strong class="font-semibold">Matin :</strong> Tour Eiffel (monter tôt) 🗼</li>
+                            <li><strong class="font-semibold">Midi :</strong> Pique-nique sur le Champ de Mars 🧺</li>
+                            <li><strong class="font-semibold">Après-midi :</strong> Les Invalides (Musée de l'Armée & Tombeau de Napoléon) ⚔️</li>
+                            <li><strong class="font-semibold">Soir :</strong> Arc de Triomphe (vue au coucher du soleil) 🏛️ & balade sur les Champs-Élysées 🛍️</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-bold mb-4 text-blue-600 border-b-2 border-blue-200 pb-2">Jour 3 : Art & Bohème 🎨</h3>
+                        <ul class="space-y-3 text-slate-700">
+                            <li><strong class="font-semibold">Matin :</strong> Sacré-Cœur 🕊️ & quartier de Montmartre 🏘️</li>
+                            <li><strong class="font-semibold">Midi :</strong> Déjeuner près de la Place du Tertre 🧑‍🎨</li>
+                            <li><strong class="font-semibold">Après-midi :</strong> Centre Pompidou 🏢 ou Musée d'Orsay (au choix) 🚂</li>
+                            <li><strong class="font-semibold">Soir :</strong> Dîner dans le quartier du Marais 🍲</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="info" class="tab-content hidden">
+                 <div class="bg-white p-8 rounded-2xl shadow-lg max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold text-slate-700 mb-6 text-center">Conseils pour les Transports en Commun 🚇</h2>
+                    <p class="text-slate-600 mb-6">Se déplacer dans Paris est facile avec les transports en commun. Voici quelques astuces pour faciliter vos trajets et potentiellement économiser de l'argent. 💡</p>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600">Ticket T+ 🎟️</h3>
+                            <p class="text-slate-700">C'est le ticket de base pour un trajet unique en métro, bus, tramway ou RER dans Paris (zone 1). Pour économiser, achetez un "carnet" de 10 tickets à un tarif réduit, disponible sur l'application Île-de-France Mobilités ou aux automates.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600">Passe Navigo Découverte 💳</h3>
+                            <p class="text-slate-700">Si votre séjour de 3 jours s'inscrit dans une même semaine (du lundi au dimanche) et que vous prévoyez de beaucoup vous déplacer, ce passe peut être très rentable. Il offre un accès illimité à tous les transports pour une semaine. Il faut acheter la carte (5€) et la charger. Attention, une photo d'identité est nécessaire.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600">Applications Utiles 📱</h3>
+                            <p class="text-slate-700">Téléchargez des applications comme <strong class="font-semibold">Citymapper</strong> ou l'application officielle <strong class="font-semibold">Île-de-France Mobilités</strong>. Elles sont indispensables pour trouver les meilleurs itinéraires en temps réel, vérifier les horaires et être informé des perturbations.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="monument-modal" class="modal-backdrop">
+        <div class="modal-content w-11/12 max-w-2xl p-6 md:p-8 rounded-2xl shadow-2xl relative">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const monumentsData = [
+            { id: 1, name: "Tour Eiffel", price: 30.00, icon: "🗼", description: "Symbole incontournable de Paris, offrant une vue panoramique imprenable sur la ville.", tariffs: "• Ascenseur (Sommet): Adulte ~30,00 €\n• Ascenseur (2ème étage): Adulte ~19,50 €\n• Escalier (2ème étage): Adulte ~12,30 €\n• Tarifs réduits pour jeunes et enfants.", hours: "Généralement de 9h30 à 23h45 (dernière montée).", transport: "• Métro: Ligne 9 (Trocadéro), Ligne 6 (Bir-Hakeim)\n• RER: Ligne C (Champ de Mars)", tips: "Réservez vos billets en ligne et à l'avance pour éviter les longues files d'attente.", visited: false, notes: "" },
+            { id: 2, name: "Musée du Louvre", price: 17.00, icon: "🖼️", description: "L'un des plus grands musées du monde, abritant des œuvres comme la Joconde.", tariffs: "• Billet plein tarif: ~17 € (en ligne)\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "9h00 à 18h00. Fermé le mardi. Nocturnes le vendredi.", transport: "• Métro: Ligne 1, 7 (Palais Royal - Musée du Louvre)", tips: "Prévoyez au moins une demi-journée. Réservez en ligne.", visited: false, notes: "" },
+            { id: 3, name: "Cathédrale Notre-Dame", price: 0, icon: "⛪", description: "Chef-d'œuvre gothique en reconstruction. Le parvis et l'extérieur sont visibles.", tariffs: "Accès au parvis gratuit. Intérieur fermé au public.", hours: "Accès au parvis en permanence.", transport: "• Métro: Ligne 4 (Cité)\n• RER: Ligne B, C (Saint-Michel)", tips: "Admirez l'extérieur et le travail de restauration. Promenez-vous sur l'Île de la Cité.", visited: false, notes: "" },
+            { id: 4, name: "Arc de Triomphe", price: 13.00, icon: "🏛️", description: "Monument emblématique offrant une vue imprenable sur les Champs-Élysées.", tariffs: "• Billet plein tarif: ~13 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 10h00 à 22h30.", transport: "• Métro: Ligne 1, 2, 6 (Charles de Gaulle - Étoile)\n• RER: Ligne A (Charles de Gaulle - Étoile)", tips: "Montez au sommet pour une vue spectaculaire, surtout au coucher du soleil.", visited: false, notes: "" },
+            { id: 5, name: "Sacré-Cœur", price: 0, icon: "🕊️", description: "Magnifique basilique blanche offrant une vue panoramique depuis Montmartre.", tariffs: "• Accès à la Basilique: Gratuit\n• Accès au Dôme: ~8 €", hours: "Basilique: 6h00 à 22h30.", transport: "• Métro: Ligne 2 (Anvers), Ligne 12 (Abbesses)\n• Funiculaire de Montmartre", tips: "Profitez de l'ambiance de Montmartre et de la Place du Tertre.", visited: false, notes: "" },
+            { id: 6, name: "Musée d'Orsay", price: 16.00, icon: "🎨", description: "Ancienne gare abritant une collection d'art impressionniste.", tariffs: "• Billet plein tarif: ~16 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "9h30 à 18h00. Fermé le lundi. Nocturne le jeudi.", transport: "• Métro: Ligne 12 (Solférino)\n• RER: Ligne C (Musée d'Orsay)", tips: "Ne manquez pas la vue de Paris depuis l'horloge géante.", visited: false, notes: "" },
+            { id: 7, name: "Les Invalides", price: 15.00, icon: "⚔️", description: "Complexe abritant le Musée de l'Armée et le tombeau de Napoléon Ier.", tariffs: "• Billet plein tarif: ~15 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 10h00 à 18h00.", transport: "• Métro: Ligne 8, 13 (Invalides)\n• RER: Ligne C (Invalides)", tips: "Prévoyez au moins 2-3 heures pour explorer.", visited: false, notes: "" },
+            { id: 8, name: "Centre Pompidou", price: 15.00, icon: "🏢", description: "Centre national d'art et de culture à l'architecture audacieuse.", tariffs: "• Billet Musée & Expos: ~15 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "11h00 à 22h00. Fermé le mardi.", transport: "• Métro: Ligne 1, 4, 7, 11, 14 (Châtelet)\n• RER: Ligne A, B, D (Châtelet - Les Halles)", tips: "Profitez de la vue depuis les étages supérieurs.", visited: false, notes: "" },
+            { id: 9, name: "Panthéon", price: 11.50, icon: "🎓", description: "Mausolée des grandes figures de l'histoire de France.", tariffs: "• Billet plein tarif: ~11,50 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 10h00 à 18h00.", transport: "• Métro: Ligne 10 (Cardinal Lemoine)\n• RER: Ligne B (Luxembourg)", tips: "Admirez l'architecture néoclassique et le pendule de Foucault.", visited: false, notes: "" },
+            { id: 10, name: "Sainte-Chapelle", price: 11.50, icon: "✨", description: "Joyau gothique célèbre pour ses magnifiques vitraux.", tariffs: "• Billet plein tarif: ~11,50 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 9h00 à 17h00.", transport: "• Métro: Ligne 4 (Cité)\n• RER: Ligne B, C (Saint-Michel)", tips: "Visitez par temps ensoleillé pour apprécier la lumière des vitraux.", visited: false, notes: "" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+            const monumentsGrid = document.getElementById('monuments-grid');
+            const modal = document.getElementById('monument-modal');
+            const modalBody = document.getElementById('modal-body');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            function showTab(tabId) {
+                contents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== tabId);
+                });
+                tabs.forEach(tab => {
+                    const isTabActive = tab.dataset.tab === tabId;
+                    tab.classList.toggle('tab-active', isTabActive);
+                    tab.classList.toggle('tab-inactive', !isTabActive);
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => showTab(tab.dataset.tab));
+            });
+
+            function renderMonumentsGrid() {
+                monumentsGrid.innerHTML = ''; // Clear existing cards
+                monumentsData.forEach(monument => {
+                    const card = document.createElement('div');
+                    card.id = `monument-card-${monument.id}`;
+                    card.className = `monument-card bg-white p-5 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col items-center text-center relative ${monument.visited ? 'visited' : ''}`;
+                    card.innerHTML = `
+                        <div class="text-5xl mb-3">${monument.icon}</div>
+                        <h3 class="text-xl font-bold text-slate-700">${monument.name}</h3>
+                        <p class="text-blue-500 font-semibold mt-2">${monument.price > 0 ? `~${monument.price.toFixed(2)} €` : 'Gratuit'}</p>
+                        ${monument.visited ? '<span class="absolute top-3 right-3 text-green-500 text-2xl">✅</span>' : ''}
+                    `;
+                    card.addEventListener('click', () => openModal(monument));
+                    monumentsGrid.appendChild(card);
+                });
+            }
+
+            function openModal(monument) {
+                modalBody.innerHTML = `
+                    <h2 class="text-3xl font-bold mb-4 text-slate-800">${monument.icon} ${monument.name}</h2>
+                    <p class="text-slate-600 mb-6">${monument.description}</p>
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600">💶 Tarifs Indicatifs</h3>
+                            <p class="text-slate-700 whitespace-pre-line">${monument.tariffs}</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600">🕒 Horaires</h3>
+                            <p class="text-slate-700">${monument.hours}</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600">🚇 Accès</h3>
+                            <p class="text-slate-700 whitespace-pre-line">${monument.transport}</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600">💡 Conseil</h3>
+                            <p class="text-slate-700">${monument.tips}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="notes-textarea" class="block text-lg font-semibold text-blue-600 mb-2">📝 Vos Notes :</label>
+                        <textarea id="notes-textarea" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200" rows="4" placeholder="Ajoutez vos souvenirs, astuces ou commentaires ici...">${monument.notes}</textarea>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="visited-checkbox" class="h-5 w-5 text-green-600 rounded focus:ring-green-500" ${monument.visited ? 'checked' : ''}>
+                            <label for="visited-checkbox" class="ml-2 text-lg font-semibold text-slate-700">✅ Marqué comme visité</label>
+                        </div>
+                        <button id="save-notes-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300 transform hover:scale-105">
+                            Sauvegarder 💾
+                        </button>
+                    </div>
+                `;
+
+                const notesTextarea = document.getElementById('notes-textarea');
+                const visitedCheckbox = document.getElementById('visited-checkbox');
+                const saveNotesBtn = document.getElementById('save-notes-btn');
+
+                saveNotesBtn.addEventListener('click', () => {
+                    monument.notes = notesTextarea.value;
+                    monument.visited = visitedCheckbox.checked;
+                    renderMonumentsGrid(); // Re-render grid to update visited status
+                    closeModal();
+                });
+
+                modal.classList.add('active');
+            }
+
+            function closeModal() {
+                modal.classList.remove('active');
+            }
+
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            renderMonumentsGrid(); // Initial render of monument cards
+
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            const chartData = monumentsData.filter(m => m.price > 0);
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.map(m => m.name),
+                    datasets: [{
+                        label: 'Tarif Adulte Plein (€)',
+                        data: chartData.map(m => m.price),
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)', /* Slightly more opaque blue */
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1,
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#e5e7eb' },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' €';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: { size: 10 }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1f2937',
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 6,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Tarif: ${context.parsed.y} €`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            showTab('dashboard');
+        });
+    </script>
+</body>
+</html>
