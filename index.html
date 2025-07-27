@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planificateur de Visite à Paris</title>
+    <title>Planificateur de Visite en France</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Modern Neutrals with Vibrant Accents (Light Grey, Slate, Sky Blue, Subtle Green) -->
-    <!-- Application Structure Plan: A tab-based SPA. The structure includes: 1) A 'Dashboard' with a price comparison chart for a quick overview. 2) A 'Monuments' section with interactive cards for detailed exploration, now including "visited" status and notes. 3) A '3-Day Plan' section with a suggested itinerary grouped by location for efficiency. 4) A 'Practical Info' section for general tips. This task-oriented structure is more user-friendly for trip planning than a linear list, allowing users to switch between high-level comparison, detailed lookup, and itinerary planning seamlessly. -->
-    <!-- Visualization & Content Choices: Report Info: Monument prices -> Goal: Compare -> Viz: Bar Chart (Chart.js) -> Interaction: Hover for details -> Justification: Provides an immediate visual comparison of costs, a key factor in planning. Report Info: Monument details -> Goal: Inform/Organize -> Presentation: Interactive Cards in a Grid -> Interaction: Click to open a modal with full details, mark as visited, add notes -> Justification: A scannable, organized view that provides deep information on demand, now with personal tracking and annotation capabilities. Report Info: Itinerary -> Goal: Organize -> Presentation: 3-column layout -> Interaction: Static, but logically grouped -> Justification: Offers a clear, actionable plan that adds value beyond a simple list. -->
+    <!-- Application Structure Plan: A tab-based SPA. The structure includes: 1) A 'Dashboard' with a price comparison chart for a quick overview. 2) A 'Monuments' section with interactive cards for detailed exploration, now including "visited" status and notes. 3) A 'Practical Info' section for general tips. This task-oriented structure is more user-friendly for trip planning than a linear list, allowing users to switch between high-level comparison, detailed lookup, and itinerary planning seamlessly. A city selection dropdown has been added to dynamically load monument data and price charts for the selected city. -->
+    <!-- Visualization & Content Choices: Report Info: Monument prices per city -> Goal: Compare -> Viz: Bar Chart (Chart.js) -> Interaction: Hover for details, dynamic update on city change -> Justification: Provides an immediate visual comparison of costs, a key factor in planning, now city-specific. Report Info: Monument details per city -> Goal: Inform/Organize -> Presentation: Interactive Cards in a Grid -> Interaction: Click to open a modal with full details, mark as visited, add notes, dynamic update on city change -> Justification: A scannable, organized view that provides deep information on demand, with personal tracking and annotation capabilities, adapting to the selected city. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #F8F8F8; }
@@ -53,14 +53,38 @@
     <div id="app" class="container mx-auto p-4 md:p-8 max-w-7xl">
 
         <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-slate-700">🗺️ Votre Planificateur de Visite à Paris 🇫🇷</h1>
-            <p class="text-lg text-slate-500 mt-2">Organisez vos 3 jours inoubliables dans la Ville Lumière ! ✨</p>
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-700">🗺️ Votre Planificateur de Visite en France 🇫🇷</h1>
+            <p class="text-lg text-slate-500 mt-2">Organisez vos voyages inoubliables dans les grandes villes de France ! ✨</p>
+            <div class="mt-4">
+                <label for="city-select" class="block text-lg font-semibold text-slate-700 mb-2">Choisissez une ville :</label>
+                <select id="city-select" class="p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 text-lg">
+                    <option value="Paris">Paris</option>
+                    <option value="Lyon">Lyon</option>
+                    <option value="Marseille">Marseille</option>
+                    <option value="Nice">Nice</option>
+                    <option value="Bordeaux">Bordeaux</option>
+                    <option value="Toulouse">Toulouse</option>
+                    <option value="Strasbourg">Strasbourg</option>
+                    <option value="Lille">Lille</option>
+                    <option value="Nantes">Nantes</option>
+                    <option value="Montpellier">Montpellier</option>
+                    <option value="Rennes">Rennes</option>
+                    <option value="Reims">Reims</option>
+                    <option value="Grenoble">Grenoble</option>
+                    <option value="Dijon">Dijon</option>
+                    <option value="Rouen">Rouen</option>
+                    <option value="Tours">Tours</option>
+                    <option value="Clermont-Ferrand">Clermont-Ferrand</option>
+                    <option value="Metz">Metz</option>
+                    <option value="Nancy">Nancy</option>
+                    <option value="Avignon">Avignon</option>
+                </select>
+            </div>
         </header>
 
         <nav class="flex flex-wrap justify-center border-b-2 border-gray-200 mb-8">
             <button data-tab="dashboard" class="nav-tab text-lg font-semibold py-3 px-6 border-b-4 tab-active">📊 Tableau de Bord</button>
             <button data-tab="monuments" class="nav-tab text-lg font-semibold py-3 px-6 border-b-4 tab-inactive">🏛️ Monuments</button>
-            <button data-tab="planner" class="nav-tab text-lg font-semibold py-3 px-6 border-b-4 tab-inactive">🗓️ Plan 3 Jours</button>
             <button data-tab="info" class="nav-tab text-lg font-semibold py-3 px-6 border-b-4 tab-inactive">💡 Infos Pratiques</button>
         </nav>
 
@@ -68,7 +92,7 @@
             <section id="dashboard" class="tab-content">
                  <div class="bg-white p-6 rounded-2xl shadow-lg">
                     <h2 class="text-2xl font-bold text-center mb-2 text-slate-700">Comparatif des Tarifs Adultes 💰</h2>
-                    <p class="text-center text-slate-500 mb-6">Visualisez rapidement le coût d'entrée des principaux monuments (hors tarifs réduits ou gratuité). Cela peut vous aider à budgétiser vos visites. 📊</p>
+                    <p class="text-center text-slate-500 mb-6">Visualisez rapidement le coût d'entrée des principaux monuments (hors tarifs réduits ou gratuité) de la ville sélectionnée. Cela peut vous aider à budgétiser vos visites. 📊</p>
                     <div class="chart-container">
                         <canvas id="priceChart"></canvas>
                     </div>
@@ -77,65 +101,33 @@
 
             <section id="monuments" class="tab-content hidden">
                 <div class="text-center mb-8">
-                    <h2 class="text-2xl font-bold text-slate-700">Explorez les Monuments de Paris 📍</h2>
+                    <h2 class="text-2xl font-bold text-slate-700">Explorez les Monuments de <span id="current-city-name">Paris</span> 📍</h2>
                     <p class="text-slate-500">Cliquez sur une carte pour afficher toutes les informations détaillées, marquer comme visité et ajouter vos notes. 📝</p>
                 </div>
                 <div id="monuments-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 </div>
             </section>
 
-            <section id="planner" class="tab-content hidden">
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl font-bold text-slate-700">Suggestion de Planning sur 3 Jours 🗓️</h2>
-                    <p class="text-slate-500">Pour optimiser votre temps, voici un itinéraire qui regroupe les monuments par quartier. Vous pouvez bien sûr l'adapter selon vos envies ! ✨</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h3 class="text-xl font-bold mb-4 text-blue-600 border-b-2 border-blue-200 pb-2">Jour 1 : Le Cœur Historique ❤️</h3>
-                        <ul class="space-y-3 text-slate-700">
-                            <li><strong class="font-semibold">Matin :</strong> Musée du Louvre (prévoir 3-4h) 🖼️</li>
-                            <li><strong class="font-semibold">Midi :</strong> Déjeuner dans le quartier Latin 🍽️</li>
-                            <li><strong class="font-semibold">Après-midi :</strong> Sainte-Chapelle ✨ & Cathédrale Notre-Dame (extérieur) ⛪</li>
-                            <li><strong class="font-semibold">Soir :</strong> Dîner et balade sur l'Île de la Cité 🌉</li>
-                        </ul>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h3 class="text-xl font-bold mb-4 text-blue-600 border-b-2 border-blue-200 pb-2">Jour 2 : Panoramas & Gloire 🌟</h3>
-                        <ul class="space-y-3 text-slate-700">
-                            <li><strong class="font-semibold">Matin :</strong> Tour Eiffel (monter tôt) 🗼</li>
-                            <li><strong class="font-semibold">Midi :</strong> Pique-nique sur le Champ de Mars 🧺</li>
-                            <li><strong class="font-semibold">Après-midi :</strong> Les Invalides (Musée de l'Armée & Tombeau de Napoléon) ⚔️</li>
-                            <li><strong class="font-semibold">Soir :</strong> Arc de Triomphe (vue au coucher du soleil) 🏛️ & balade sur les Champs-Élysées 🛍️</li>
-                        </ul>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-lg">
-                        <h3 class="text-xl font-bold mb-4 text-blue-600 border-b-2 border-blue-200 pb-2">Jour 3 : Art & Bohème 🎨</h3>
-                        <ul class="space-y-3 text-slate-700">
-                            <li><strong class="font-semibold">Matin :</strong> Sacré-Cœur 🕊️ & quartier de Montmartre 🏘️</li>
-                            <li><strong class="font-semibold">Midi :</strong> Déjeuner près de la Place du Tertre 🧑‍🎨</li>
-                            <li><strong class="font-semibold">Après-midi :</strong> Centre Pompidou 🏢 ou Musée d'Orsay (au choix) 🚂</li>
-                            <li><strong class="font-semibold">Soir :</strong> Dîner dans le quartier du Marais 🍲</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
             <section id="info" class="tab-content hidden">
                  <div class="bg-white p-8 rounded-2xl shadow-lg max-w-4xl mx-auto">
-                    <h2 class="text-2xl font-bold text-slate-700 mb-6 text-center">Conseils pour les Transports en Commun 🚇</h2>
-                    <p class="text-slate-600 mb-6">Se déplacer dans Paris est facile avec les transports en commun. Voici quelques astuces pour faciliter vos trajets et potentiellement économiser de l'argent. 💡</p>
+                    <h2 class="text-2xl font-bold text-slate-700 mb-6 text-center">Conseils Généraux pour les Transports en France 🚇</h2>
+                    <p class="text-slate-600 mb-6">Se déplacer dans les grandes villes de France est généralement facile avec les transports en commun. Voici quelques astuces générales pour faciliter vos trajets. 💡</p>
                     <div class="space-y-4">
                         <div>
-                            <h3 class="text-lg font-semibold text-blue-600">Ticket T+ 🎟️</h3>
-                            <p class="text-slate-700">C'est le ticket de base pour un trajet unique en métro, bus, tramway ou RER dans Paris (zone 1). Pour économiser, achetez un "carnet" de 10 tickets à un tarif réduit, disponible sur l'application Île-de-France Mobilités ou aux automates.</p>
+                            <h3 class="text-lg font-semibold text-blue-600">Tickets de Transport Urbain 🎟️</h3>
+                            <p class="text-slate-700">Dans chaque grande ville, vous trouverez des systèmes de transport en commun (métro, tramway, bus). Les tickets unitaires sont disponibles, mais des carnets ou des passes journaliers/hebdomadaires sont souvent plus économiques si vous prévoyez de nombreux déplacements.</p>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-blue-600">Passe Navigo Découverte 💳</h3>
-                            <p class="text-slate-700">Si votre séjour de 3 jours s'inscrit dans une même semaine (du lundi au dimanche) et que vous prévoyez de beaucoup vous déplacer, ce passe peut être très rentable. Il offre un accès illimité à tous les transports pour une semaine. Il faut acheter la carte (5€) et la charger. Attention, une photo d'identité est nécessaire.</p>
+                            <h3 class="text-lg font-semibold text-blue-600">Passe Navigo (Île-de-France) / Passes Locaux 💳</h3>
+                            <p class="text-slate-700">Le Passe Navigo est spécifique à la région parisienne. Pour les autres villes, renseignez-vous sur les passes locaux (ex: TCL à Lyon, RTM à Marseille) qui peuvent offrir un accès illimité pour une durée donnée.</p>
                         </div>
                         <div>
                             <h3 class="text-lg font-semibold text-blue-600">Applications Utiles 📱</h3>
-                            <p class="text-slate-700">Téléchargez des applications comme <strong class="font-semibold">Citymapper</strong> ou l'application officielle <strong class="font-semibold">Île-de-France Mobilités</strong>. Elles sont indispensables pour trouver les meilleurs itinéraires en temps réel, vérifier les horaires et être informé des perturbations.</p>
+                            <p class="text-slate-700">Téléchargez des applications comme <strong class="font-semibold">Citymapper</strong> ou les applications officielles des réseaux de transport locaux (ex: "TCL" pour Lyon, "RTM" pour Marseille). Elles sont indispensables pour trouver les meilleurs itinéraires en temps réel, vérifier les horaires et être informé des perturbations.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600">Trains Inter-Villes (SNCF) 🚄</h3>
+                            <p class="text-slate-700">Pour voyager entre les grandes villes, le train est souvent l'option la plus rapide et la plus pratique. Réservez vos billets à l'avance sur le site de la SNCF pour bénéficier des meilleurs tarifs.</p>
                         </div>
                     </div>
                 </div>
@@ -151,18 +143,127 @@
     </div>
 
     <script>
-        const monumentsData = [
-            { id: 1, name: "Tour Eiffel", price: 30.00, icon: "🗼", description: "Symbole incontournable de Paris, offrant une vue panoramique imprenable sur la ville.", tariffs: "• Ascenseur (Sommet): Adulte ~30,00 €\n• Ascenseur (2ème étage): Adulte ~19,50 €\n• Escalier (2ème étage): Adulte ~12,30 €\n• Tarifs réduits pour jeunes et enfants.", hours: "Généralement de 9h30 à 23h45 (dernière montée).", transport: "• Métro: Ligne 9 (Trocadéro), Ligne 6 (Bir-Hakeim)\n• RER: Ligne C (Champ de Mars)", tips: "Réservez vos billets en ligne et à l'avance pour éviter les longues files d'attente.", visited: false, notes: "" },
-            { id: 2, name: "Musée du Louvre", price: 17.00, icon: "🖼️", description: "L'un des plus grands musées du monde, abritant des œuvres comme la Joconde.", tariffs: "• Billet plein tarif: ~17 € (en ligne)\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "9h00 à 18h00. Fermé le mardi. Nocturnes le vendredi.", transport: "• Métro: Ligne 1, 7 (Palais Royal - Musée du Louvre)", tips: "Prévoyez au moins une demi-journée. Réservez en ligne.", visited: false, notes: "" },
-            { id: 3, name: "Cathédrale Notre-Dame", price: 0, icon: "⛪", description: "Chef-d'œuvre gothique en reconstruction. Le parvis et l'extérieur sont visibles.", tariffs: "Accès au parvis gratuit. Intérieur fermé au public.", hours: "Accès au parvis en permanence.", transport: "• Métro: Ligne 4 (Cité)\n• RER: Ligne B, C (Saint-Michel)", tips: "Admirez l'extérieur et le travail de restauration. Promenez-vous sur l'Île de la Cité.", visited: false, notes: "" },
-            { id: 4, name: "Arc de Triomphe", price: 13.00, icon: "🏛️", description: "Monument emblématique offrant une vue imprenable sur les Champs-Élysées.", tariffs: "• Billet plein tarif: ~13 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 10h00 à 22h30.", transport: "• Métro: Ligne 1, 2, 6 (Charles de Gaulle - Étoile)\n• RER: Ligne A (Charles de Gaulle - Étoile)", tips: "Montez au sommet pour une vue spectaculaire, surtout au coucher du soleil.", visited: false, notes: "" },
-            { id: 5, name: "Sacré-Cœur", price: 0, icon: "🕊️", description: "Magnifique basilique blanche offrant une vue panoramique depuis Montmartre.", tariffs: "• Accès à la Basilique: Gratuit\n• Accès au Dôme: ~8 €", hours: "Basilique: 6h00 à 22h30.", transport: "• Métro: Ligne 2 (Anvers), Ligne 12 (Abbesses)\n• Funiculaire de Montmartre", tips: "Profitez de l'ambiance de Montmartre et de la Place du Tertre.", visited: false, notes: "" },
-            { id: 6, name: "Musée d'Orsay", price: 16.00, icon: "🎨", description: "Ancienne gare abritant une collection d'art impressionniste.", tariffs: "• Billet plein tarif: ~16 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "9h30 à 18h00. Fermé le lundi. Nocturne le jeudi.", transport: "• Métro: Ligne 12 (Solférino)\n• RER: Ligne C (Musée d'Orsay)", tips: "Ne manquez pas la vue de Paris depuis l'horloge géante.", visited: false, notes: "" },
-            { id: 7, name: "Les Invalides", price: 15.00, icon: "⚔️", description: "Complexe abritant le Musée de l'Armée et le tombeau de Napoléon Ier.", tariffs: "• Billet plein tarif: ~15 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 10h00 à 18h00.", transport: "• Métro: Ligne 8, 13 (Invalides)\n• RER: Ligne C (Invalides)", tips: "Prévoyez au moins 2-3 heures pour explorer.", visited: false, notes: "" },
-            { id: 8, name: "Centre Pompidou", price: 15.00, icon: "🏢", description: "Centre national d'art et de culture à l'architecture audacieuse.", tariffs: "• Billet Musée & Expos: ~15 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "11h00 à 22h00. Fermé le mardi.", transport: "• Métro: Ligne 1, 4, 7, 11, 14 (Châtelet)\n• RER: Ligne A, B, D (Châtelet - Les Halles)", tips: "Profitez de la vue depuis les étages supérieurs.", visited: false, notes: "" },
-            { id: 9, name: "Panthéon", price: 11.50, icon: "🎓", description: "Mausolée des grandes figures de l'histoire de France.", tariffs: "• Billet plein tarif: ~11,50 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 10h00 à 18h00.", transport: "• Métro: Ligne 10 (Cardinal Lemoine)\n• RER: Ligne B (Luxembourg)", tips: "Admirez l'architecture néoclassique et le pendule de Foucault.", visited: false, notes: "" },
-            { id: 10, name: "Sainte-Chapelle", price: 11.50, icon: "✨", description: "Joyau gothique célèbre pour ses magnifiques vitraux.", tariffs: "• Billet plein tarif: ~11,50 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 9h00 à 17h00.", transport: "• Métro: Ligne 4 (Cité)\n• RER: Ligne B, C (Saint-Michel)", tips: "Visitez par temps ensoleillé pour apprécier la lumière des vitraux.", visited: false, notes: "" }
-        ];
+        const allCitiesData = {
+            "Paris": [
+                { id: 1, name: "Tour Eiffel", price: 30.00, icon: "🗼", description: "Symbole incontournable de Paris, offrant une vue panoramique imprennable sur la ville.", tariffs: "• Ascenseur (Sommet): Adulte ~30,00 €\n• Ascenseur (2ème étage): Adulte ~19,50 €\n• Escalier (2ème étage): Adulte ~12,30 €\n• Tarifs réduits pour jeunes et enfants.", hours: "Généralement de 9h30 à 23h45 (dernière montée).", transport: "• Métro: Ligne 9 (Trocadéro), Ligne 6 (Bir-Hakeim)\n• RER: Ligne C (Champ de Mars)", tips: "Réservez vos billets en ligne et à l'avance pour éviter les longues files d'attente.", visited: false, notes: "", history: "Construite par Gustave Eiffel pour l'Exposition Universelle de 1889, elle devait être temporaire mais est devenue le symbole universel de Paris et de la France. Elle fut la plus haute structure du monde pendant 41 ans." },
+                { id: 2, name: "Musée du Louvre", price: 17.00, icon: "🖼️", description: "L'un des plus grands musées du monde, abritant des œuvres comme la Joconde.", tariffs: "• Billet plein tarif: ~17 € (en ligne)\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "9h00 à 18h00. Fermé le mardi. Nocturnes le vendredi.", transport: "• Métro: Ligne 1, 7 (Palais Royal - Musée du Louvre)", tips: "Prévoyez au moins une demi-journée. Réservez en ligne.", visited: false, notes: "", history: "Ancienne forteresse médiévale puis palais royal, le Louvre est devenu un musée en 1793. Sa pyramide de verre, ajoutée en 1989, est une œuvre architecturale moderne controversée mais emblématique." },
+                { id: 3, name: "Cathédrale Notre-Dame", price: 0, icon: "⛪", description: "Chef-d'œuvre gothique en reconstruction. Le parvis et l'extérieur sont visibles.", tariffs: "Accès au parvis gratuit. Intérieur fermé au public.", hours: "Accès au parvis en permanence.", transport: "• Métro: Ligne 4 (Cité)\n• RER: Ligne B, C (Saint-Michel)", tips: "Admirez l'extérieur et le travail de restauration. Promenez-vous sur l'Île de la Cité.", visited: false, notes: "", history: "Construite entre le XIIe et le XIVe siècle, Notre-Dame est l'un des plus beaux exemples de l'architecture gothique. Elle a été le théâtre de nombreux événements historiques majeurs et est un symbole de la France. Gravement endommagée par un incendie en 2019, elle est en cours de restauration." },
+                { id: 4, name: "Arc de Triomphe", price: 13.00, icon: "🏛️", description: "Monument emblématique offrant une vue imprenable sur les Champs-Élysées.", tariffs: "• Billet plein tarif: ~13 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 10h00 à 22h30.", transport: "• Métro: Ligne 1, 2, 6 (Charles de Gaulle - Étoile)\n• RER: Ligne A (Charles de Gaulle - Étoile)", tips: "Montez au sommet pour une vue spectaculaire, surtout au coucher du soleil.", visited: false, notes: "", history: "Commandé par Napoléon Ier en 1806 pour commémorer ses victoires, l'Arc de Triomphe a été achevé en 1836. Il abrite la Tombe du Soldat Inconnu depuis 1921." },
+                { id: 5, name: "Sacré-Cœur", price: 0, icon: "🕊️", description: "Magnifique basilique blanche offrant une vue panoramique depuis Montmartre.", tariffs: "• Accès à la Basilique: Gratuit\n• Accès au Dôme: ~8 €", hours: "Basilique: 6h00 à 22h30.", transport: "• Métro: Ligne 2 (Anvers), Ligne 12 (Abbesses)\n• Funiculaire de Montmartre", tips: "Profitez de l'ambiance de Montmartre et de la Place du Tertre.", visited: false, notes: "", history: "Construite de 1875 à 1914, la Basilique du Sacré-Cœur est un monument politique et culturel érigé en symbole de l'ordre moral après la Commune de Paris. Son architecture romano-byzantine est distinctive." },
+                { id: 6, name: "Musée d'Orsay", price: 16.00, icon: "🎨", description: "Ancienne gare abritant une collection d'art impressionniste.", tariffs: "• Billet plein tarif: ~16 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "9h30 à 18h00. Fermé le lundi. Nocturne le jeudi.", transport: "• Métro: Ligne 12 (Solférino)\n• RER: Ligne C (Musée d'Orsay)", tips: "Ne manquez pas la vue de Paris depuis l'horloge géante.", visited: false, notes: "", history: "Inaugurée en 1900 comme gare ferroviaire pour l'Exposition Universelle, la Gare d'Orsay a été transformée en musée en 1986. Elle est célèbre pour sa collection d'art impressionniste et post-impressionniste." },
+                { id: 7, name: "Les Invalides", price: 15.00, icon: "⚔️", description: "Complexe abritant le Musée de l'Armée et le tombeau de Napoléon Ier.", tariffs: "• Billet plein tarif: ~15 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 10h00 à 18h00.", transport: "• Métro: Ligne 8, 13 (Invalides)\n• RER: Ligne C (Invalides)", tips: "Prévoyez au moins 2-3 heures pour explorer.", visited: false, notes: "", history: "Construit sous Louis XIV au XVIIe siècle pour accueillir les soldats invalides, ce complexe est devenu un symbole de la puissance militaire française. Il abrite le tombeau de Napoléon Ier sous le Dôme des Invalides." },
+                { id: 8, name: "Centre Pompidou", price: 15.00, icon: "🏢", description: "Centre national d'art et de culture à l'architecture audacieuse.", tariffs: "• Billet Musée & Expos: ~15 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "11h00 à 22h00. Fermé le mardi.", transport: "• Métro: Ligne 1, 4, 7, 11, 14 (Châtelet)\n• RER: Ligne A, B, D (Châtelet - Les Halles)", tips: "Profitez de la vue depuis les étages supérieurs.", visited: false, notes: "", history: "Inauguré en 1977, le Centre Pompidou est un bâtiment à l'architecture avant-gardiste, avec ses structures techniques (tuyaux, escaliers) visibles à l'extérieur. Il abrite le Musée National d'Art Moderne." },
+                { id: 9, name: "Panthéon", price: 11.50, icon: "🎓", description: "Mausolée des grandes figures de l'histoire de France.", tariffs: "• Billet plein tarif: ~11,50 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 10h00 à 18h00.", transport: "• Métro: Ligne 10 (Cardinal Lemoine)\n• RER: Ligne B (Luxembourg)", tips: "Admirez l'architecture néoclassique et le pendule de Foucault.", visited: false, notes: "", history: "Initialement une église dédiée à Sainte Geneviève, le Panthéon a été transformé en mausolée national pendant la Révolution française. Il honore les grands hommes et femmes qui ont marqué l'histoire de France." },
+                { id: 10, name: "Sainte-Chapelle", price: 11.50, icon: "✨", description: "Joyau gothique célèbre pour ses magnifiques vitraux.", tariffs: "• Billet plein tarif: ~11,50 €\n• Gratuit pour les -26 ans résidents de l'UE.", hours: "Généralement de 9h00 à 17h00.", transport: "• Métro: Ligne 4 (Cité)\n• RER: Ligne B, C (Saint-Michel)", tips: "Visitez par temps ensoleillé pour apprécier la lumière des vitraux.", visited: false, notes: "", history: "Construite au XIIIe siècle par Saint Louis pour abriter les reliques de la Passion du Christ, la Sainte-Chapelle est un chef-d'œuvre de l'architecture gothique rayonnante, célèbre pour ses 1 113 vitraux." }
+            ],
+            "Lyon": [
+                { id: 11, name: "Basilique Notre-Dame de Fourvière", price: 0, icon: "⛪", description: "Dominant Lyon, cette basilique offre une vue panoramique sur la ville.", tariffs: "Accès à la basilique gratuit. Crypte et Trésor payants.", hours: "Généralement 7h00 - 18h30.", transport: "• Funiculaire F2 (Fourvière)", tips: "Profitez de la vue imprenable sur Lyon.", visited: false, notes: "", history: "Construite entre 1872 et 1896, la basilique de Fourvière est un symbole de la ville de Lyon. Elle est dédiée à la Vierge Marie, protectrice de la ville, et son style architectural est un mélange d'influences romanes et byzantines." },
+                { id: 12, name: "Vieux Lyon", price: 0, icon: "🏘️", description: "Quartier médiéval et Renaissance, classé au patrimoine mondial de l'UNESCO.", tariffs: "Accès libre. Musées payants.", hours: "Accès en permanence.", transport: "• Métro: Ligne D (Vieux Lyon - Cathédrale St-Jean)", tips: "Explorez les traboules (passages secrets) et la Cathédrale St-Jean.", visited: false, notes: "", history: "Le Vieux Lyon est l'un des plus vastes ensembles Renaissance d'Europe. Ses ruelles pavées et ses traboules témoignent de l'histoire des soyeux lyonnais et de la vie médiévale et Renaissance." },
+                { id: 13, name: "Parc de la Tête d'Or", price: 0, icon: "🌳", description: "Grand parc urbain avec un lac, un jardin botanique et un zoo gratuit.", tariffs: "Accès gratuit.", hours: "Généralement 6h30 - 22h30 (été).", transport: "• Tram: T1, T4 (Charpennes - Charles Hernu)\n• Bus: C1, C2, C26, 70", tips: "Idéal pour une promenade relaxante ou un pique-nique.", visited: false, notes: "", history: "Créé en 1857, le Parc de la Tête d'Or est le plus grand parc urbain de France. Il a été conçu sur le modèle des jardins à l'anglaise et est un véritable poumon vert pour la ville de Lyon." },
+                { id: 14, name: "Musée des Confluences", price: 12.00, icon: "🏛️", description: "Musée d'histoire naturelle, d'anthropologie et des sociétés, à l'architecture moderne.", tariffs: "• Billet plein tarif: ~12 €", hours: "10h00 - 18h00. Fermé le lundi.", transport: "• Tram: T1 (Musée des Confluences)", tips: "Son architecture est aussi impressionnante que ses collections.", visited: false, notes: "", history: "Ouvert en 2014, le Musée des Confluences est un projet architectural audacieux situé à la confluence du Rhône et de la Saône. Il explore l'histoire de l'humanité et de la vie sur Terre à travers des collections scientifiques et ethnographiques." },
+                { id: 15, name: "Les Halles Paul Bocuse", price: 0, icon: "🍽️", description: "Marché couvert gastronomique avec des produits locaux et des restaurants.", tariffs: "Accès libre. Dégustations payantes.", hours: "Horaires variables selon les commerçants.", transport: "• Métro: Ligne B (Place Guichard - Bourse du Travail)", tips: "Un incontournable pour les gourmands.", visited: false, notes: "", history: "Créées en 1971, les Halles de Lyon ont été rebaptisées en l'honneur du célèbre chef Paul Bocuse en 2006. Elles sont un temple de la gastronomie lyonnaise, regroupant des artisans de bouche de renom." }
+            ],
+            "Marseille": [
+                { id: 16, name: "Notre-Dame de la Garde", price: 0, icon: "⛪", description: "La 'Bonne Mère', basilique emblématique offrant une vue panoramique sur Marseille et la mer.", tariffs: "Accès gratuit. Crypte payante.", hours: "Généralement 7h00 - 18h30.", transport: "• Bus: Ligne 60", tips: "Montez-y pour le coucher du soleil pour une vue spectaculaire.", visited: false, notes: "", history: "Construite au XIXe siècle, la basilique Notre-Dame de la Garde est le monument le plus emblématique de Marseille. Sa statue dorée de la Vierge à l'Enfant, la 'Bonne Mère', veille sur les marins et la ville." },
+                { id: 17, name: "Vieux Port", price: 0, icon: "⚓", description: "Cœur historique et emblématique de Marseille, point de départ de nombreuses activités.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Métro: Ligne 1 (Vieux Port)", tips: "Profitez de l'ambiance, du marché aux poissons le matin.", visited: false, notes: "", history: "Fondé par les Grecs au VIe siècle av. J.-C., le Vieux Port est le berceau de Marseille. Il a toujours été le centre névralgique de la ville, un lieu d'échanges commerciaux et culturels." },
+                { id: 18, name: "Mucem", price: 11.00, icon: "🏛️", description: "Musée des Civilisations de l'Europe et de la Méditerranée, avec une architecture moderne.", tariffs: "• Billet plein tarif: ~11 €", hours: "10h00 - 19h00 (été). Fermé le mardi.", transport: "• Tram: T2 (République Dames)\n• Bus: 82, 82S", tips: "Promenez-vous sur la passerelle reliant le musée au Fort Saint-Jean.", visited: false, notes: "", history: "Inauguré en 2013, le Mucem est un musée national dédié aux civilisations de l'Europe et de la Méditerranée. Son architecture audacieuse, signée Rudy Ricciotti, en fait un point de repère moderne sur le front de mer marseillais." },
+                { id: 19, name: "Les Calanques (accès)", price: 0, icon: "🏞️", description: "Magnifiques criques rocheuses aux eaux turquoise. Accès par bateau ou randonnée.", tariffs: "Accès libre pour la randonnée (selon conditions météo). Excursions en bateau payantes.", hours: "Accès variable selon les saisons et risques d'incendie.", transport: "• Bus: Ligne 20 (Luminy pour Calanque de Sugiton)", tips: "Vérifiez les conditions d'accès et les risques d'incendie avant de partir.", visited: false, notes: "", history: "Le Massif des Calanques, s'étendant sur 20 km entre Marseille et Cassis, est un site naturel unique au monde. Formées par l'érosion au fil des millénaires, ces criques offrent des paysages spectaculaires et une biodiversité remarquable." },
+                { id: 20, name: "Quartier du Panier", price: 0, icon: "🎨", description: "Le plus ancien quartier de Marseille, avec ses ruelles étroites et ses façades colorées.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Métro: Ligne 1 (Vieux Port)", tips: "Perdez-vous dans ses rues, découvrez les boutiques d'artisans et les graffitis.", visited: false, notes: "", history: "Le Panier est le quartier le plus ancien de Marseille, fondé par les Grecs. Il a conservé son caractère populaire et ses ruelles étroites qui témoignent de l'histoire multiculturelle de la ville." }
+            ],
+            "Nice": [
+                { id: 21, name: "Promenade des Anglais", price: 0, icon: "🏖️", description: "Célèbre promenade le long de la Baie des Anges.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: T2 (Jean Médecin, puis marche)\n• Bus: Nombreuses lignes", tips: "Louez un vélo ou promenez-vous au coucher du soleil.", visited: false, notes: "", history: "Construite au XIXe siècle par la communauté anglaise hivernante, la Promenade des Anglais est devenue l'emblème de Nice. Elle longe la célèbre Baie des Anges et est un lieu de vie et de loisirs." },
+                { id: 22, name: "Vieux Nice", price: 0, icon: "🏘️", description: "Quartier historique avec ses ruelles colorées, son marché aux fleurs et ses églises baroques.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: T1 (Opéra - Vieille Ville)", tips: "Goûtez la socca et explorez les petites boutiques.", visited: false, notes: "", history: "Le Vieux Nice est le cœur historique de la ville, avec ses rues étroites, ses façades colorées de style baroque et ses marchés animés. Il témoigne de l'influence italienne passée de la ville." },
+                { id: 23, name: "Colline du Château", price: 0, icon: "🌳", description: "Ancien site du château de Nice, offrant une vue panoramique sur la ville, la Baie des Anges et le port.", tariffs: "Accès gratuit. Ascenseur gratuit.", hours: "Généralement 8h00 - 18h00 (hiver) / 20h00 (été).", transport: "• Ascenseur du Château (Quai des États-Unis)", tips: "Idéal pour des photos et un moment de détente.", visited: false, notes: "", history: "La Colline du Château était le site de la forteresse médiévale de Nice, détruite en 1706 par Louis XIV. Aujourd'hui, c'est un parc qui offre les plus belles vues sur la ville et la mer." },
+                { id: 24, name: "Musée Matisse", price: 10.00, icon: "🎨", description: "Musée dédié à l'œuvre du peintre Henri Matisse, situé dans une villa génoise.", tariffs: "• Billet plein tarif: ~10 €", hours: "10h00 - 18h00. Fermé le mardi.", transport: "• Bus: Ligne 5 (Musée Matisse)", tips: "Situé à côté des ruines romaines de Cimiez.", visited: false, notes: "", history: "Le Musée Matisse est installé dans une villa génoise du XVIIe siècle sur la colline de Cimiez, où Matisse a vécu. Il retrace l'évolution de l'œuvre de l'artiste, de ses débuts à ses dernières créations." },
+                { id: 25, name: "Musée National Marc Chagall", price: 10.00, icon: "🖼️", description: "Abritant la plus grande collection publique d'œuvres de Marc Chagall.", tariffs: "• Billet plein tarif: ~10 €", hours: "10h00 - 18h00 (été). Fermé le mardi.", transport: "• Bus: Ligne 5, 7, 14, 17, 20, 22 (Musée Chagall)", tips: "Un musée lumineux et spirituel.", visited: false, notes: "", history: "Le Musée National Marc Chagall a été inauguré en 1973 du vivant de l'artiste. Il abrite la série du Message Biblique, 17 grandes toiles illustrant l'Ancien Testament, ainsi que d'autres œuvres de Chagall." }
+            ],
+            "Bordeaux": [
+                { id: 26, name: "Place de la Bourse & Miroir d'eau", price: 0, icon: "✨", description: "Ensemble architectural classique du XVIIIe siècle avec un effet miroir unique.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: Ligne C (Place de la Bourse)", tips: "Le Miroir d'eau est magnifique au lever ou au coucher du soleil.", visited: false, notes: "", history: "La Place de la Bourse, construite au XVIIIe siècle, est un chef-d'œuvre de l'urbanisme classique. Le Miroir d'eau, créé en 2006, est la plus grande surface réfléchissante du monde et est devenu un symbole moderne de Bordeaux." },
+                { id: 27, name: "Cité du Vin", price: 22.00, icon: "🍷", description: "Musée interactif et centre culturel dédié au vin, à l'architecture audacieuse.", tariffs: "• Billet plein tarif: ~22 € (avec dégustation)", hours: "Généralement 10h00 - 19h00.", transport: "• Tram: Ligne B (La Cité du Vin)", tips: "Prévoyez plusieurs heures pour l'exploration interactive.", visited: false, notes: "", history: "Ouverte en 2016, la Cité du Vin est un lieu unique au monde dédié à la culture et aux civilisations du vin. Son architecture audacieuse évoque le mouvement du vin dans un verre." },
+                { id: 28, name: "Cathédrale Saint-André", price: 0, icon: "⛪", description: "Majestueuse cathédrale gothique, classée au patrimoine mondial de l'UNESCO.", tariffs: "Accès gratuit.", hours: "Généralement 10h00 - 18h00.", transport: "• Tram: Ligne A, B (Hôtel de Ville)", tips: "Montez à la Tour Pey-Berland pour une vue sur Bordeaux (payant).", visited: false, notes: "", history: "La Cathédrale Saint-André, dont la construction a débuté au XIIe siècle, est un édifice gothique imposant. Elle a été le lieu de mariages royaux, dont celui d'Aliénor d'Aquitaine et Louis VII." },
+                { id: 29, name: "Grand Théâtre de Bordeaux", price: 0, icon: "🎭", description: "Magnifique opéra du XVIIIe siècle, chef-d'œuvre de l'architecture néoclassique.", tariffs: "Visites guidées payantes. Accès extérieur libre.", hours: "Horaires des visites variables.", transport: "• Tram: Ligne B (Grand Théâtre)", tips: "Admirez sa façade imposante et ses colonnes corinthiennes.", visited: false, notes: "", history: "Inauguré en 1780, le Grand Théâtre de Bordeaux est l'un des plus beaux théâtres du XVIIIe siècle en France. Son architecture néoclassique et sa colonnade en font un monument emblématique de la ville." },
+                { id: 30, name: "Quartier Saint-Pierre", price: 0, icon: "🏘️", description: "Cœur historique de Bordeaux, avec ses rues pavées, ses places animées et ses restaurants.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: Ligne A (Place du Palais)", tips: "Idéal pour flâner et découvrir l'ambiance bordelaise.", visited: false, notes: "", history: "Le quartier Saint-Pierre est le cœur historique de Bordeaux, bâti sur l'ancien port gallo-romain. Ses rues étroites et ses places animées témoignent de l'histoire médiévale et marchande de la ville." }
+            ],
+            "Toulouse": [
+                { id: 31, name: "Place du Capitole", price: 0, icon: "🏛️", description: "Cœur de Toulouse, avec son hôtel de ville et son opéra, lieu de rassemblement animé.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Métro: Ligne A (Capitole)", tips: "Profitez des cafés et de l'ambiance de la ville rose.", visited: false, notes: "", history: "La Place du Capitole est le centre névralgique de Toulouse depuis le XIIe siècle. Le Capitole abrite l'Hôtel de Ville et le Théâtre du Capitole, symboles de la puissance et de la culture toulousaines." },
+                { id: 32, name: "Basilique Saint-Sernin", price: 0, icon: "⛪", description: "Chef-d'œuvre de l'art roman, classée au patrimoine mondial de l'UNESCO.", tariffs: "Accès à la basilique gratuit. Crypte et Trésor payants.", hours: "Généralement 9h00 - 18h00.", transport: "• Métro: Ligne B (Jeanne d'Arc)", tips: "L'une des plus grandes églises romanes conservées en Europe.", visited: false, notes: "", history: "Construite entre le XIe et le XIIe siècle, la Basilique Saint-Sernin est un joyau de l'art roman et une étape majeure sur les chemins de Saint-Jacques-de-Compostelle. Elle est célèbre pour son clocher octogonal." },
+                { id: 33, name: "Cité de l'espace", price: 23.50, icon: "🚀", description: "Parc à thème scientifique et musée dédié à l'espace et à l'astronomie.", tariffs: "• Billet plein tarif: ~23,50 €", hours: "Généralement 10h00 - 17h00/18h00.", transport: "• Bus: Ligne 37 (Cité de l'espace)", tips: "Idéal pour les familles et les passionnés d'espace.", visited: false, notes: "", history: "Ouverte en 1997, la Cité de l'espace est un parc scientifique et ludique unique en Europe. Elle permet de découvrir l'aventure spatiale à travers des expositions, des répliques de fusées et des animations." },
+                { id: 34, name: "Musée des Augustins", price: 5.00, icon: "🖼️", description: "Musée des Beaux-Arts de Toulouse, situé dans un ancien monastère gothique.", tariffs: "• Billet plein tarif: ~5 €", hours: "10h00 - 18h00. Fermé le mardi.", transport: "• Métro: Ligne A (Esquirol)", tips: "Admirez ses collections de sculptures romanes et de peintures.", visited: false, notes: "", history: "Le Musée des Augustins est installé dans l'ancien couvent des Augustins, un bâtiment gothique du XIVe siècle. Il abrite une riche collection de sculptures romanes et de peintures du XIVe au XXe siècle." }
+            ],
+            "Strasbourg": [
+                { id: 35, name: "Cathédrale Notre-Dame de Strasbourg", price: 0, icon: "⛪", description: "Chef-d'œuvre de l'art gothique, célèbre pour son horloge astronomique et sa flèche.", tariffs: "Accès gratuit. Montée à la plateforme payante (~8 €).", hours: "Généralement 8h30 - 19h00.", transport: "• Tram: A, D (Langstross Grand'Rue)", tips: "Ne manquez pas l'horloge astronomique à 12h30.", visited: false, notes: "", history: "La Cathédrale Notre-Dame de Strasbourg, construite entre le XIIe et le XVe siècle, est un chef-d'œuvre de l'art gothique. Sa flèche, haute de 142 mètres, en a fait l'édifice le plus haut du monde pendant plusieurs siècles." },
+                { id: 36, name: "La Petite France", price: 0, icon: "🏘️", description: "Quartier historique pittoresque avec ses maisons à colombages et ses canaux.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: A, D (Hommes de Fer)", tips: "Promenez-vous le long des canaux et découvrez les ponts couverts.", visited: false, notes: "", history: "La Petite France est le quartier le plus pittoresque de Strasbourg, avec ses maisons à colombages des XVIe et XVIIe siècles. C'était autrefois le quartier des tanneurs, des pêcheurs et des meuniers." },
+                { id: 37, name: "Palais Rohan", price: 7.50, icon: "👑", description: "Ancienne résidence des princes-évêques, abritant trois musées (archéologique, arts décoratifs, beaux-arts).", tariffs: "• Billet plein tarif: ~7,50 € (par musée)", hours: "10h00 - 18h00. Fermé le mardi.", transport: "• Tram: A, D (Porte de l'Hôpital)", tips: "Un ensemble architectural remarquable.", visited: false, notes: "", history: "Construit au XVIIIe siècle, le Palais Rohan était la résidence des princes-évêques de Strasbourg. C'est un exemple remarquable de l'architecture baroque française et il abrite aujourd'hui plusieurs musées." }
+            ],
+            "Lille": [
+                { id: 38, name: "Grand'Place (Place du Général de Gaulle)", price: 0, icon: "🏛️", description: "Cœur de Lille, entourée de bâtiments historiques et de l'Opéra.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Métro: Ligne 1, 2 (Gare Lille Flandres)", tips: "Profitez de l'ambiance et des terrasses.", visited: false, notes: "", history: "La Grand'Place de Lille est le centre historique et social de la ville. Entourée de magnifiques bâtiments flamands, elle témoigne de l'histoire marchande de Lille." },
+                { id: 39, name: "Palais des Beaux-Arts", price: 7.00, icon: "🎨", description: "L'un des plus grands musées de France, avec des collections variées (peintures, sculptures...).", tariffs: "• Billet plein tarif: ~7 €", hours: "10h00 - 18h00. Fermé le mardi.", transport: "• Métro: Ligne 1 (République Beaux-Arts)", tips: "Prévoyez plusieurs heures pour la visite.", visited: false, notes: "", history: "Inauguré en 1892, le Palais des Beaux-Arts de Lille est l'un des plus grands musées de France. Ses collections couvrent l'art européen du Moyen Âge au XXe siècle, avec des œuvres de Goya, Rubens, Delacroix..." },
+                { id: 40, name: "Vieux-Lille", price: 0, icon: "🏘️", description: "Quartier historique avec ses rues pavées, ses maisons en briques rouges et ses boutiques.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Métro: Ligne 1 (Rihour)", tips: "Idéal pour flâner et faire du shopping.", visited: false, notes: "", history: "Le Vieux-Lille est le quartier historique de la ville, caractérisé par ses rues pavées et ses façades en briques rouges. Il témoigne de l'architecture flamande et de l'histoire de la ville." }
+            ],
+            "Nantes": [
+                { id: 41, name: "Château des Ducs de Bretagne", price: 0, icon: "🏰", description: "Ancien château fort, résidence des ducs de Bretagne, abritant le Musée d'histoire de Nantes.", tariffs: "Accès à la cour et remparts gratuit. Musée payant (~8 €).", hours: "Château: 8h30 - 19h00. Musée: 10h00 - 18h00. Fermé le lundi.", transport: "• Tram: Ligne 1 (Duchesse Anne - Château des Ducs de Bretagne)", tips: "Visitez les remparts pour une belle vue sur la ville.", visited: false, notes: "", history: "Le Château des Ducs de Bretagne est l'emblème historique de Nantes. Construit au XIIIe siècle, il fut la résidence principale des Ducs de Bretagne avant de devenir une prison puis un musée." },
+                { id: 42, name: "Les Machines de l'île", price: 8.50, icon: "🐘", description: "Univers fantastique avec des machines géantes inspirées de Jules Verne et Léonard de Vinci.", tariffs: "• Galerie des Machines: ~8,50 €\n• Grand Éléphant: ~8,50 €", hours: "Horaires variables, vérifiez le site.", transport: "• Tram: Ligne 1 (Chantiers Navals)", tips: "Réservez vos billets en ligne, surtout pour le Grand Éléphant.", visited: false, notes: "", history: "Les Machines de l'île sont un projet artistique unique, né de l'imagination de François Delarozière et Pierre Orefice. Elles sont installées sur le site des anciens chantiers navals de Nantes, rendant hommage à l'histoire industrielle de la ville." },
+                { id: 43, name: "Passage Pommeraye", price: 0, icon: "🛍️", description: "Magnifique galerie marchande du XIXe siècle, classée monument historique.", tariffs: "Accès libre.", hours: "Généralement 8h00 - 20h00.", transport: "• Tram: Ligne 2, 3 (Commerce)", tips: "Admirez son architecture et ses sculptures.", visited: false, notes: "", history: "Le Passage Pommeraye est une galerie marchande couverte inaugurée en 1843. C'est un chef-d'œuvre architectural du XIXe siècle, célèbre pour son escalier monumental et ses sculptures." }
+            ],
+            "Montpellier": [
+                { id: 44, name: "Place de la Comédie", price: 0, icon: "🎭", description: "Cœur historique et animé de Montpellier, avec l'Opéra Comédie et la Fontaine des Trois Grâces.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: Ligne 1, 2, 3, 4 (Comédie)", tips: "Point de départ idéal pour explorer la ville.", visited: false, notes: "", history: "La Place de la Comédie est le centre névralgique de Montpellier depuis le XVIIIe siècle. Elle est surnommée l'Œuf en raison de sa forme ovale et est un lieu de vie et de rassemblement." },
+                { id: 45, name: "Cathédrale Saint-Pierre", price: 0, icon: "⛪", description: "Cathédrale gothique imposante, reconnaissable à ses deux tours coniques.", tariffs: "Accès gratuit.", hours: "Généralement 9h00 - 18h00.", transport: "• Tram: Ligne 1, 2, 3, 4 (Place Albert 1er - Saint-Charles)", tips: "Admirez son architecture unique.", visited: false, notes: "", history: "La Cathédrale Saint-Pierre de Montpellier, construite à partir du XIVe siècle, est un édifice gothique remarquable. Elle a été fortifiée et a servi de défense pour la ville." },
+                { id: 46, name: "Musée Fabre", price: 8.00, icon: "🎨", description: "Important musée d'art avec des collections de peintures européennes du XVe au XXe siècle.", tariffs: "• Billet plein tarif: ~8 €", hours: "10h00 - 18h00. Fermé le lundi.", transport: "• Tram: Ligne 1, 2 (Corum)", tips: "Un des plus beaux musées de province.", visited: false, notes: "", history: "Le Musée Fabre, fondé en 1825 par le peintre François-Xavier Fabre, est l'un des plus importants musées de beaux-arts en France. Ses collections couvrent une vaste période, du XVe au XXIe siècle." }
+            ],
+            "Rennes": [
+                { id: 47, name: "Parlement de Bretagne", price: 6.00, icon: "🏛️", description: "Ancien palais de justice, chef-d'œuvre de l'architecture du XVIIe siècle.", tariffs: "• Visite guidée: ~6 €", hours: "Visites sur réservation.", transport: "• Métro: Ligne A (République)", tips: "Réservez votre visite à l'avance pour découvrir son histoire.", visited: false, notes: "", history: "Le Parlement de Bretagne, construit au XVIIe siècle, est un monument emblématique de Rennes. Ancien palais de justice, il est un chef-d'œuvre de l'architecture classique française." },
+                { id: 48, name: "Centre Historique (Vieux Rennes)", price: 0, icon: "🏘️", description: "Quartier pittoresque avec ses maisons à colombages colorées et ses rues pavées.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Métro: Ligne A (Sainte-Anne)", tips: "Flânez dans les rues et découvrez les crêperies.", visited: false, notes: "", history: "Le Vieux Rennes est le quartier historique de la ville, caractérisé par ses nombreuses maisons à colombages, dont certaines datent du XVe siècle. Il a été épargné par le grand incendie de 1720." },
+                { id: 49, name: "Parc du Thabor", price: 0, icon: "🌳", description: "Magnifique jardin public de style français, avec un jardin botanique et une roseraie.", tariffs: "Accès gratuit.", hours: "Généralement 7h30 - 20h30 (été).", transport: "• Bus: C1, C2, 14, 44 (Thabor)", tips: "Idéal pour une pause détente en pleine nature.", visited: false, notes: "", history: "Le Parc du Thabor, aménagé au XIXe siècle sur l'ancien verger des moines de l'abbaye Saint-Melaine, est un des plus beaux jardins publics de France. Il combine jardin à la française, jardin à l'anglaise et roseraie." }
+            ],
+            "Reims": [
+                { id: 50, name: "Cathédrale Notre-Dame de Reims", price: 0, icon: "⛪", description: "Lieu de sacre des rois de France, chef-d'œuvre gothique classé à l'UNESCO.", tariffs: "Accès gratuit.", hours: "Généralement 7h30 - 19h30.", transport: "• Tram: A, B (Opéra)", tips: "Admirez les vitraux de Chagall et la façade.", visited: false, notes: "", history: "La Cathédrale Notre-Dame de Reims est un monument majeur de l'art gothique, célèbre pour avoir été le lieu de sacre de presque tous les rois de France. Sa construction a débuté au XIIIe siècle." },
+                { id: 51, name: "Palais du Tau", price: 8.00, icon: "👑", description: "Ancien palais archiépiscopal, voisin de la cathédrale, abritant les trésors des sacres.", tariffs: "• Billet plein tarif: ~8 €", hours: "9h30 - 12h30 / 14h00 - 18h00. Fermé le lundi.", transport: "• Tram: A, B (Opéra)", tips: "Complète la visite de la cathédrale.", visited: false, notes: "", history: "Le Palais du Tau, ancien palais des archevêques de Reims, est étroitement lié à l'histoire des sacres royaux. Il abrite aujourd'hui des trésors et des tapisseries liés à ces cérémonies." },
+                { id: 52, name: "Maisons de Champagne (visites)", price: 25.00, icon: "🍾", description: "Visitez les célèbres caves de champagne (ex: Veuve Clicquot, Taittinger, Mumm).", tariffs: "• Visite + dégustation: à partir de ~25 €", hours: "Horaires variables selon les maisons.", transport: "Accès variable, souvent en bus ou à pied depuis le centre.", tips: "Réservez à l'avance, surtout en haute saison.", visited: false, notes: "", history: "Les grandes maisons de Champagne de Reims ont été fondées aux XVIIIe et XIXe siècles. Leurs caves souterraines, creusées dans la craie, sont un témoignage de l'histoire et de la tradition de l'élaboration du champagne." }
+            ],
+            "Grenoble": [
+                { id: 53, name: "Téléphérique de la Bastille", price: 8.00, icon: "🚠", description: "Remontée mécanique offrant une vue panoramique sur Grenoble et les montagnes.", tariffs: "• Aller-retour: ~8 €", hours: "Généralement 9h00 - 00h00 (été).", transport: "• Tram: A, B (Hubert Dubedout - Maison du Tourisme)", tips: "Vue spectaculaire, surtout au coucher du soleil.", visited: false, notes: "", history: "Le Téléphérique de Grenoble, surnommé 'les bulles', a été inauguré en 1934. Il relie le centre-ville à la Bastille, une ancienne forteresse militaire qui offre un panorama exceptionnel sur la ville et les Alpes." },
+                { id: 54, name: "Musée de Grenoble", price: 0, icon: "🎨", description: "Musée d'art moderne et contemporain, avec des collections riches et variées.", tariffs: "Collections permanentes gratuites. Expositions temporaires payantes.", hours: "10h00 - 18h00. Fermé le mardi.", transport: "• Tram: A, B (Musée de Grenoble)", tips: "Un des musées d'art les plus importants de province.", visited: false, notes: "", history: "Fondé en 1798, le Musée de Grenoble est l'un des plus anciens musées de France. Il possède une collection d'art moderne et contemporain de premier plan, ainsi que des œuvres anciennes et égyptiennes." },
+                { id: 55, name: "Vieux Grenoble", price: 0, icon: "🏘️", description: "Quartier historique avec ses rues piétonnes, ses places animées et ses façades colorées.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: A, B (Victor Hugo)", tips: "Flânez dans les rues et découvrez l'ambiance locale.", visited: false, notes: "", history: "Le Vieux Grenoble est le quartier historique de la ville, avec ses rues pavées, ses places animées et ses bâtiments anciens. Il témoigne de l'histoire médiévale et moderne de Grenoble." }
+            ],
+            "Dijon": [
+                { id: 56, name: "Palais des Ducs et des États de Bourgogne", price: 0, icon: "👑", description: "Ancien palais ducal, abritant aujourd'hui l'Hôtel de Ville et le Musée des Beaux-Arts.", tariffs: "Accès à la cour et à la Tour Philippe le Bon (payante, ~5 €) gratuit. Musée gratuit.", hours: "Musée: 9h30 - 18h00. Fermé le mardi.", transport: "• Tram: T1, T2 (Darcy ou République)", tips: "Montez à la Tour Philippe le Bon pour une vue sur la ville.", visited: false, notes: "", history: "Le Palais des Ducs et des États de Bourgogne est un ensemble architectural majeur de Dijon. Ancienne résidence des Ducs de Bourgogne, il témoigne de la grandeur de la cour ducale aux XIVe et XVe siècles." },
+                { id: 57, name: "Musée des Beaux-Arts de Dijon", price: 0, icon: "🖼️", description: "L'un des plus anciens et riches musées de France, avec des œuvres du Moyen Âge à l'art moderne.", tariffs: "Accès gratuit pour les collections permanentes.", hours: "9h30 - 18h00. Fermé le mardi.", transport: "• Tram: T1, T2 (Darcy ou République)", tips: "Ne manquez pas les tombeaux des Ducs de Bourgogne.", visited: false, notes: "", history: "Le Musée des Beaux-Arts de Dijon, installé dans le Palais des Ducs, est l'un des plus anciens musées de France. Il possède des collections exceptionnelles, notamment les tombeaux des Ducs de Bourgogne." },
+                { id: 58, name: "Parcours de la Chouette", price: 0, icon: "🦉", description: "Itinéraire pédestre balisé pour découvrir les principaux sites historiques de Dijon.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "Départ depuis l'Office de Tourisme.", tips: "Suivez les petites chouettes gravées au sol.", visited: false, notes: "", history: "Le Parcours de la Chouette est un itinéraire touristique créé pour faire découvrir le centre historique de Dijon. Il suit les traces d'une petite chouette sculptée sur l'église Notre-Dame, devenue le porte-bonheur de la ville." }
+            ],
+            "Rouen": [
+                { id: 59, name: "Cathédrale Notre-Dame de Rouen", price: 0, icon: "⛪", description: "Majestueuse cathédrale gothique, immortalisée par Claude Monet.", tariffs: "Accès gratuit.", hours: "Généralement 9h00 - 19h00.", transport: "• Métro/Tram: Gare Rue Verte", tips: "Admirez sa façade sculptée et ses vitraux.", visited: false, notes: "", history: "La Cathédrale Notre-Dame de Rouen est un chef-d'œuvre de l'art gothique, dont la construction s'est étendue du XIIe au XVIe siècle. Elle est célèbre pour sa façade sculptée et a été peinte de nombreuses fois par Claude Monet." },
+                { id: 60, name: "Gros Horloge", price: 7.00, icon: "🕰️", description: "Horloge astronomique du XIVe siècle, emblème de Rouen, avec un beffroi visitable.", tariffs: "• Billet plein tarif: ~7 €", hours: "10h00 - 13h00 / 14h00 - 18h00. Fermé le lundi.", transport: "• Métro/Tram: Gare Rue Verte", tips: "Montez au beffroi pour une vue sur la ville.", visited: false, notes: "", history: "Le Gros Horloge est une horloge astronomique du XIVe siècle, installée dans un beffroi. C'est l'un des monuments les plus emblématiques de Rouen, témoin de l'histoire médiévale de la ville." },
+                { id: 61, name: "Musée des Beaux-Arts de Rouen", price: 0, icon: "🎨", description: "Important musée d'art avec des collections de peintures, sculptures et dessins.", tariffs: "Collections permanentes gratuites. Expositions temporaires payantes.", hours: "10h00 - 18h00. Fermé le mardi.", transport: "• Métro/Tram: Théâtre des Arts", tips: "Riche collection impressionniste.", visited: false, notes: "", history: "Le Musée des Beaux-Arts de Rouen, fondé en 1801, possède une riche collection d'œuvres d'art, notamment des peintures impressionnistes (Monet, Sisley, Pissarro), ainsi que des œuvres de Géricault, Delacroix..." }
+            ],
+            "Tours": [
+                { id: 62, name: "Cathédrale Saint-Gatien", price: 0, icon: "⛪", description: "Cathédrale gothique avec de magnifiques vitraux et une façade richement décorée.", tariffs: "Accès gratuit.", hours: "Généralement 9h00 - 18h00.", transport: "• Tram: A (Porte de Loire)", tips: "Ne manquez pas les vitraux du XIIIe siècle.", visited: false, notes: "", history: "La Cathédrale Saint-Gatien de Tours est un édifice gothique dont la construction s'est étendue du XIIIe au XVIe siècle. Elle est célèbre pour ses magnifiques vitraux et sa façade richement sculptée." },
+                { id: 63, name: "Vieux Tours (Place Plumereau)", price: 0, icon: "🏘️", description: "Quartier historique avec ses maisons à colombages, ses rues animées et ses restaurants.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: A (Porte de Loire)", tips: "Idéal pour flâner et profiter de l'ambiance.", visited: false, notes: "", history: "Le Vieux Tours, notamment autour de la Place Plumereau, est le quartier historique de la ville. Ses maisons à colombages et son ambiance animée en font un lieu de vie et de convivialité." },
+                { id: 64, name: "Château de Tours", price: 0, icon: "🏰", description: "Ancien château royal, aujourd'hui espace d'expositions temporaires.", tariffs: "Accès libre pour la cour. Expositions payantes.", hours: "Horaires variables selon les expositions.", transport: "• Tram: A (Porte de Loire)", tips: "Situé en bord de Loire, avec de belles vues.", visited: false, notes: "", history: "Le Château de Tours, dont les origines remontent au XIe siècle, fut une résidence royale. Aujourd'hui, il accueille des expositions temporaires et offre une vue sur la Loire." }
+            ],
+            "Clermont-Ferrand": [
+                { id: 65, name: "Cathédrale Notre-Dame-de-l'Assomption", price: 0, icon: "⛪", description: "Cathédrale gothique unique en pierre de Volvic noire.", tariffs: "Accès gratuit.", hours: "Généralement 9h00 - 18h00.", transport: "• Tram: A (Jaude)", tips: "Admirez sa couleur sombre si particulière.", visited: false, notes: "", history: "La Cathédrale Notre-Dame-de-l'Assomption de Clermont-Ferrand est unique en France par sa construction entièrement en pierre de Volvic, une roche volcanique noire. Sa construction a débuté au XIIIe siècle." },
+                { id: 66, name: "Place de Jaude", price: 0, icon: "🏛️", description: "Cœur battant de la ville, avec ses statues et ses commerces.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: A (Jaude)", tips: "Point de départ pour explorer le centre-ville.", visited: false, notes: "", history: "La Place de Jaude est la place principale de Clermont-Ferrand, un lieu de vie et de rassemblement. Elle est dominée par des statues emblématiques, dont celle de Vercingétorix." },
+                { id: 67, name: "L'Aventure Michelin", price: 9.50, icon: "🚗", description: "Musée interactif retraçant l'histoire de Michelin et de ses innovations.", tariffs: "• Billet plein tarif: ~9,50 €", hours: "Généralement 10h00 - 18h00.", transport: "• Tram: A (Les Carmes)", tips: "Intéressant pour comprendre l'histoire industrielle de la ville.", visited: false, notes: "", history: "L'Aventure Michelin est un musée interactif qui retrace l'histoire du groupe Michelin, né à Clermont-Ferrand. Il présente les innovations de l'entreprise, des pneus aux cartes routières." }
+            ],
+            "Metz": [
+                { id: 68, name: "Cathédrale Saint-Étienne de Metz", price: 0, icon: "⛪", description: "Surnommée la 'Lanterne du Bon Dieu' pour ses vastes surfaces vitrées.", tariffs: "Accès gratuit.", hours: "Généralement 9h00 - 18h00.", transport: "• Bus: Lignes L1, L2, L3 (Cathédrale)", tips: "Possède les plus grandes surfaces vitrées gothiques d'Europe.", visited: false, notes: "", history: "La Cathédrale Saint-Étienne de Metz est un chef-d'œuvre de l'art gothique, célèbre pour ses 6 500 m² de vitraux, dont certains réalisés par Chagall. Sa construction s'est étendue du XIIIe au XVIe siècle." },
+                { id: 69, name: "Centre Pompidou-Metz", price: 12.00, icon: "🏢", description: "Musée d'art moderne et contemporain, annexe du Centre Pompidou de Paris, à l'architecture audacieuse.", tariffs: "• Billet plein tarif: ~12 €", hours: "10h00 - 18h00. Fermé le mardi.", transport: "• Bus: Ligne L1 (Pompidou)", tips: "Son architecture est une œuvre d'art en soi.", visited: false, notes: "", history: "Le Centre Pompidou-Metz, inauguré en 2010, est une antenne du Centre Pompidou de Paris. Son architecture spectaculaire, inspirée d'un chapeau chinois, en fait un bâtiment emblématique de Metz." },
+                { id: 70, name: "Quartier Impérial", price: 0, icon: "👑", description: "Quartier construit sous l'annexion allemande, avec des bâtiments de style germanique.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Gare de Metz-Ville", tips: "Découvrez une architecture différente en France.", visited: false, notes: "", history: "Le Quartier Impérial de Metz a été construit à la fin du XIXe et au début du XXe siècle, lorsque Metz était sous domination allemande. Il présente une architecture éclectique, mêlant styles néo-roman, néo-gothique et Art nouveau." }
+            ],
+            "Nancy": [
+                { id: 71, name: "Place Stanislas", price: 0, icon: "✨", description: "Magnifique place royale, classée au patrimoine mondial de l'UNESCO, emblème de Nancy.", tariffs: "Accès libre.", hours: "Accès en permanence.", transport: "• Tram: T1 (Cathédrale ou Point Central)", tips: "Illuminée la nuit, un spectacle à ne pas manquer.", visited: false, notes: "", history: "La Place Stanislas, construite au XVIIIe siècle, est un chef-d'œuvre de l'architecture classique et l'une des plus belles places royales d'Europe. Elle a été classée au patrimoine mondial de l'UNESCO." },
+                { id: 72, name: "Musée des Beaux-Arts de Nancy", price: 7.00, icon: "🎨", description: "Musée d'art avec des collections allant de la Renaissance à l'art contemporain.", tariffs: "• Billet plein tarif: ~7 €", hours: "10h00 - 18h00. Fermé le mardi.", transport: "• Tram: T1 (Cathédrale ou Point Central)", tips: "Situé sur la Place Stanislas.", visited: false, notes: "", history: "Le Musée des Beaux-Arts de Nancy, fondé en 1793, est l'un des plus anciens musées de France. Il abrite des collections variées, de la peinture européenne ancienne à l'art contemporain, ainsi qu'une importante collection de Daum." },
+                { id: 73, name: "Musée de l'École de Nancy", price: 7.00, icon: "🌸", description: "Dédié au mouvement Art nouveau de Nancy, dans une maison de maître.", tariffs: "• Billet plein tarif: ~7 €", hours: "10h00 - 18h00. Fermé le mardi.", transport: "• Bus: Ligne 16 (Musée de l'École de Nancy)", tips: "Un incontournable pour les amateurs d'Art nouveau.", visited: false, notes: "", history: "Le Musée de l'École de Nancy est installé dans l'ancienne demeure d'Eugène Corbin, un collectionneur d'Art nouveau. Il est entièrement dédié à ce mouvement artistique majeur de la fin du XIXe et début du XXe siècle." }
+            ],
+            "Avignon": [
+                { id: 74, name: "Palais des Papes", price: 12.00, icon: "👑", description: "La plus grande forteresse gothique du monde, ancienne résidence des papes, classée à l'UNESCO.", tariffs: "• Billet plein tarif: ~12 €", hours: "Généralement 9h00 - 19h00 (été).", transport: "À pied depuis le centre.", tips: "Prévoyez plusieurs heures pour la visite.", visited: false, notes: "", history: "Le Palais des Papes est un monument historique majeur, ancienne résidence des papes au XIVe siècle. C'est la plus grande forteresse gothique du monde et un site classé au patrimoine mondial de l'UNESCO." },
+                { id: 75, name: "Pont d'Avignon (Pont Saint-Bénézet)", price: 5.00, icon: "🌉", description: "Célèbre pont médiéval, dont il ne reste que quatre arches, classé à l'UNESCO.", tariffs: "• Billet plein tarif: ~5 €", hours: "Généralement 9h00 - 19h00 (été).", transport: "À pied depuis le centre.", tips: "Chanté dans la célèbre comptine.", visited: false, notes: "", history: "Le Pont Saint-Bénézet, plus connu sous le nom de Pont d'Avignon, est un pont médiéval dont la construction a débuté au XIIe siècle. Il est célèbre grâce à la comptine 'Sur le Pont d'Avignon' et est classé à l'UNESCO." },
+                { id: 76, name: "Rocher des Doms", price: 0, icon: "🌳", description: "Jardin public offrant une vue panoramique sur le Palais des Papes, le Rhône et le Pont d'Avignon.", tariffs: "Accès gratuit.", hours: "Généralement 7h30 - 20h00 (été).", transport: "À pied depuis le Palais des Papes.", tips: "Idéal pour une pause avec une vue imprenable.", visited: false, notes: "", history: "Le Rocher des Doms est le berceau historique d'Avignon, site de la première occupation humaine. Il a été aménagé en jardin public au XIXe siècle et offre une vue imprenable sur la ville et ses monuments." }
+            ]
+        };
+
+        let currentCity = "Paris";
+        let priceChartInstance = null; // To store the Chart.js instance
 
         document.addEventListener('DOMContentLoaded', () => {
             const tabs = document.querySelectorAll('.nav-tab');
@@ -171,6 +272,8 @@
             const modal = document.getElementById('monument-modal');
             const modalBody = document.getElementById('modal-body');
             const closeModalBtn = document.getElementById('close-modal');
+            const citySelect = document.getElementById('city-select');
+            const currentCityNameSpan = document.getElementById('current-city-name');
 
             function showTab(tabId) {
                 contents.forEach(content => {
@@ -188,8 +291,9 @@
             });
 
             function renderMonumentsGrid() {
-                monumentsGrid.innerHTML = ''; // Clear existing cards
-                monumentsData.forEach(monument => {
+                monumentsGrid.innerHTML = '';
+                const monumentsForCity = allCitiesData[currentCity];
+                monumentsForCity.forEach(monument => {
                     const card = document.createElement('div');
                     card.id = `monument-card-${monument.id}`;
                     card.className = `monument-card bg-white p-5 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col items-center text-center relative ${monument.visited ? 'visited' : ''}`;
@@ -209,6 +313,10 @@
                     <h2 class="text-3xl font-bold mb-4 text-slate-800">${monument.icon} ${monument.name}</h2>
                     <p class="text-slate-600 mb-6">${monument.description}</p>
                     <div class="space-y-4 mb-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600">📜 Histoire</h3>
+                            <p class="text-slate-700 whitespace-pre-line">${monument.history}</p>
+                        </div>
                         <div>
                             <h3 class="text-lg font-semibold text-blue-600">💶 Tarifs Indicatifs</h3>
                             <p class="text-slate-700 whitespace-pre-line">${monument.tariffs}</p>
@@ -268,65 +376,80 @@
                 }
             });
 
-            renderMonumentsGrid(); // Initial render of monument cards
-
-            const ctx = document.getElementById('priceChart').getContext('2d');
-            const chartData = monumentsData.filter(m => m.price > 0);
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: chartData.map(m => m.name),
-                    datasets: [{
-                        label: 'Tarif Adulte Plein (€)',
-                        data: chartData.map(m => m.price),
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)', /* Slightly more opaque blue */
-                        borderColor: 'rgba(59, 130, 246, 1)',
-                        borderWidth: 1,
-                        borderRadius: 8,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#e5e7eb' },
-                            ticks: {
-                                callback: function(value) {
-                                    return value + ' €';
+            function updatePriceChart() {
+                const chartData = allCitiesData[currentCity].filter(m => m.price > 0);
+                if (priceChartInstance) {
+                    priceChartInstance.destroy(); // Destroy existing chart instance
+                }
+                const ctx = document.getElementById('priceChart').getContext('2d');
+                priceChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.map(m => m.name),
+                        datasets: [{
+                            label: 'Tarif Adulte Plein (€)',
+                            data: chartData.map(m => m.price),
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)', /* Slightly more opaque blue */
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#e5e7eb' },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + ' €';
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    autoSkip: false,
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    font: { size: 10 }
                                 }
                             }
                         },
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                autoSkip: false,
-                                maxRotation: 45,
-                                minRotation: 45,
-                                font: { size: 10 }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1f2937',
-                            titleFont: { size: 14, weight: 'bold' },
-                            bodyFont: { size: 12 },
-                            padding: 10,
-                            cornerRadius: 6,
-                            callbacks: {
-                                label: function(context) {
-                                    return `Tarif: ${context.parsed.y} €`;
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1f2937',
+                                titleFont: { size: 14, weight: 'bold' },
+                                bodyFont: { size: 12 },
+                                padding: 10,
+                                cornerRadius: 6,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Tarif: ${context.parsed.y} €`;
+                                    }
                                 }
                             }
                         }
                     }
-                }
+                });
+            }
+
+            function updateUIForCity() {
+                currentCityNameSpan.textContent = currentCity;
+                renderMonumentsGrid();
+                updatePriceChart();
+            }
+
+            citySelect.addEventListener('change', (event) => {
+                currentCity = event.target.value;
+                updateUIForCity();
             });
             
-            showTab('dashboard');
+            updateUIForCity(); // Initial UI load for Paris
+            showTab('dashboard'); // Show dashboard on initial load
         });
     </script>
 </body>
